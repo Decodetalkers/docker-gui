@@ -34,6 +34,7 @@ MainWindow::MainWindow(QWidget *parent) :
     ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
+    MainWindow::on_local_pressed();
 
 }
 
@@ -83,7 +84,7 @@ QString MainWindow::shell(QString shell)
 
 void MainWindow::on_back_clicked()
 {
-    MainWindow::shell("echo "+pass+" | sudo -S systemctl stop docker.service");
+    MainWindow::shell("pkexec systemctl stop docker.service");
     emit showfirstwindow(pass); //发出显示主窗口信号
     MainWindow::close();
 }
@@ -111,15 +112,34 @@ void MainWindow::test(QString words)
 {
     cout<<MainWindow::turned(words)<<endl;
     MainWindow::shell("docker pull "+words);
+    MainWindow::on_flash_clicked();
 }
 void MainWindow::test2(QString words)
 {
     cout<<MainWindow::turned(words)<<endl;
     MainWindow::shell("docker rmi "+words);
+    MainWindow::on_local_pressed();
 }
 void MainWindow::remove(QString words)
 {
     MainWindow::shell("docker rm "+words);
+    MainWindow::on_recent_clicked();
+}
+void MainWindow::more(QString words)
+{
+    MainWindow::shell("deepin-terminal -e docker inspect "+words);
+}
+void MainWindow::restart(QString words)
+{
+    MainWindow::shell("docker restart "+words);
+    MainWindow::on_recent_clicked();
+}
+void MainWindow::enter(QString words)
+{
+    string xxx=MainWindow::turnstring(words);
+    string yyy=xxx+" /bin/bash";
+    QString qstr2 = QString::fromStdString(yyy);
+    MainWindow::shell("deepin-terminal -e docker exec -it "+qstr2);
 }
 void MainWindow::run(QString words)
 {
@@ -129,6 +149,29 @@ void MainWindow::run(QString words)
     string zzz=xxx+yyy;
     QString qstr2 = QString::fromStdString(zzz);
     MainWindow::shell("docker run "+qstr2);
+}
+void MainWindow::runshellture(QString words)
+{
+    cout<<MainWindow::turned(words)<<endl;
+    string xxx=MainWindow::turnstring(ui->lineEdit_2->text());
+    string yyy=MainWindow::turnstring(words);
+    string zzz=xxx+yyy;
+    QString qstr2 = QString::fromStdString(zzz);
+    MainWindow::shell("deepin-terminal -e docker run "+qstr2);
+}
+void MainWindow::runshell(QString words)
+{
+    string xxx=MainWindow::turnstring(words);
+    string yyy=xxx+" /bin/bash";
+    QString qstr2 = QString::fromStdString(yyy);
+    MainWindow::shell("deepin-terminal -e docker run -it "+qstr2);
+}
+void MainWindow::runshellback(QString words)
+{
+    string xxx = MainWindow::turnstring(words);
+    string yyy = xxx+" "+xxx +" /bin/bash";
+    QString qstr2 =QString::fromStdString(yyy);
+    MainWindow::shell("deepin-terminal -e docker run -itd --name "+qstr2);
 }
 void MainWindow::on_flash_clicked()
 {
@@ -153,15 +196,20 @@ void MainWindow::on_flash_clicked()
         ui->grid->setMargin(15);
         ui->grid->setColumnMinimumWidth(2, 15);
         MainWindow *main = static_cast<MainWindow*>(parentWidget());
+        QString test = shell("docker images | awk -F '\\\\s+ ' '{print $1}'");
         QString dd =main->shell("docker search "+search+" | awk -F '\\\\s+ ' '{print $1}'");
         QString dd2 =main->shell("docker search "+search+" | awk -F '\\\\s+ ' '{print $2}'");
         QString dd3 =main->shell("docker search "+search+" | awk -F '\\\\s+ ' '{print $3}'");
         string name=turnstring(dd);
         string dec =turnstring(dd2);
         string stars =turnstring(dd3);
+        string local = turnstring(test);
+        //cout<<local<<endl;
         vector<string> strs = split(name,"\n");
         vector<string> strs2 = split(dec,"\n");
         vector<string> strs3 = split(stars,"\n");
+        vector<string> strs4 = split(local,"\n");
+        int v=0;
         if(strs.size()==1)
         {
 
@@ -187,7 +235,7 @@ void MainWindow::on_flash_clicked()
         }
         for (int i=0;i<strs.size();i++)
         {
-           cout<<"ss"<<endl;
+         //cout<<"ss"<<endl;
            char sss[100];
 
            strcpy(sss,strs[i].c_str());
@@ -195,16 +243,38 @@ void MainWindow::on_flash_clicked()
            test1->setText(sss);
            QPushButton* test2=new QPushButton(QWidget::tr("下载"));
            ui->grid->addWidget(test1,i,0);
-           ui->grid->addWidget(test2,i,3);
-           cout<<"vv"<<endl;
+           if (i !=0)
+           {
+               v=0;
+               for(int j=1;j<strs4.size();j++)
+               {
+                   char yyy[100];
+                   strcpy(yyy,strs4[j].c_str());
+                   int c= strcmp(sss,yyy);
+                   cout<<c<<endl;
+                   cout<<yyy<<"  "<<sss<<endl;
+                   if(c==0)
+                   {
+                       v=1;
+                       break;
+                   }
+                   cout<<v<<endl;
+               }
+               cout<<v<<endl;
+               if(v !=1)
+               {
+                   ui->grid->addWidget(test2,i,3);
+                   //cout<<"vv"<<endl;
 
-           connect(test2,SIGNAL(pressed()),signalMapper,SLOT(map()),Qt::UniqueConnection);
-           cout<<"vv"<<endl;
-           signalMapper->setMapping(test2,sss);
+                   connect(test2,SIGNAL(pressed()),signalMapper,SLOT(map()),Qt::UniqueConnection);
+                   //cout<<"vv"<<endl;
+                   signalMapper->setMapping(test2,sss);
 
-           connect(signalMapper,SIGNAL(mapped(QString)),this,SLOT(test(QString)),Qt::UniqueConnection);
-           cout<<i<<" "<<i/3<<" "<<i%3*2<<strs[i]<<endl;
+                   connect(signalMapper,SIGNAL(mapped(QString)),this,SLOT(test(QString)),Qt::UniqueConnection);
+                   cout<<i<<" "<<i/3<<" "<<i%3*2<<strs[i]<<endl;
+               }
 
+            }
         }
 
     }
@@ -213,6 +283,10 @@ void MainWindow::on_local_pressed()//本地信息页面
 {
     signalMapper = new QSignalMapper(this);
     signalMapper2 = new QSignalMapper(this);
+    signalMapper3 = new QSignalMapper(this);
+    signalMapper4 = new QSignalMapper(this);
+    signalMapper5 = new QSignalMapper(this);
+    signalMapper6 = new QSignalMapper(this);
     ui->stackedWidget->setCurrentIndex(0);
     QList<QPushButton*> btns = ui->scrollAreaWidgetContents_3->findChildren<QPushButton*>();
     QList<QLabel*> labs =ui->scrollAreaWidgetContents_3->findChildren<QLabel*>();
@@ -228,7 +302,10 @@ void MainWindow::on_local_pressed()//本地信息页面
     ui->gridLayout_2->setColumnStretch(4,4);
     ui->gridLayout_2->setColumnStretch(5,2);
     ui->gridLayout_2->setColumnStretch(6,2);
-    ui->gridLayout_2->setColumnStretch(7,6);
+    ui->gridLayout_2->setColumnStretch(7,2);
+    ui->gridLayout_2->setColumnStretch(8,2);
+    ui->gridLayout_2->setColumnStretch(9,2);
+    ui->gridLayout_2->setColumnStretch(10,1);
     QString test = main->shell(" docker images | awk -F '\\\\s+ ' '{print $1}'");
     QString test2 = main->shell("docker images | awk -F '\\\\s+ ' '{print $2}'");
     QString test3 = main->shell("docker images | awk -F '\\\\s+ ' '{print $3}'");
@@ -269,17 +346,25 @@ void MainWindow::on_local_pressed()//本地信息页面
         char sss[100];
         strcpy(sss,strs[i].c_str());
         QPushButton* test3=new QPushButton(QWidget::tr("运行"));
-        QLineEdit* test4 = new QLineEdit;
+        QPushButton* test4=new QPushButton(QWidget::tr("增量运行"));
+        QPushButton* test5=new QPushButton(QWidget::tr("后台运行"));
+        QPushButton* test6=new QPushButton(QWidget::tr("终端运行"));
         ui->gridLayout_2->addWidget(test3,i,6);
         ui->gridLayout_2->addWidget(test4,i,7);
-        string q=turnstring(test4->text());
-        string ssss=q+" "+string(sss);
-        char ff[100];
-        strcpy(ff,ssss.c_str());
+        ui->gridLayout_2->addWidget(test5,i,8);
+        ui->gridLayout_2->addWidget(test6,i,9);
         connect(test3,SIGNAL(pressed()),signalMapper,SLOT(map()),Qt::UniqueConnection);
-        signalMapper->setMapping(test3,ff);
-        cout<<ff<<endl;
+        connect(test4,SIGNAL(pressed()),signalMapper3,SLOT(map()),Qt::UniqueConnection);
+        connect(test5,SIGNAL(pressed()),signalMapper4,SLOT(map()),Qt::UniqueConnection);
+        connect(test6,SIGNAL(pressed()),signalMapper5,SLOT(map()),Qt::UniqueConnection);
+        signalMapper->setMapping(test3,sss);
+        signalMapper5->setMapping(test6,sss);
+        signalMapper3->setMapping(test4,sss);
+        signalMapper4->setMapping(test5,sss);
         connect(signalMapper,SIGNAL(mapped(QString)),this,SLOT(run(QString)),Qt::UniqueConnection);
+        connect(signalMapper5,SIGNAL(mapped(QString)),this,SLOT(runshellture(QString)),Qt::UniqueConnection);
+        connect(signalMapper3,SIGNAL(mapped(QString)),this,SLOT(runshell(QString)),Qt::UniqueConnection);
+        connect(signalMapper4,SIGNAL(mapped(QString)),this,SLOT(runshellback(QString)),Qt::UniqueConnection);
     }
     for(int i=0;i<strs2.size();i++)
     {
@@ -322,6 +407,9 @@ void MainWindow::on_recent_clicked()//当前运行状态（包括目前的容器
 {
     ui->stackedWidget->setCurrentIndex(1);
     signalMapper = new QSignalMapper(this);
+    signalMapper2 = new QSignalMapper(this);
+    signalMapper3 =new QSignalMapper(this);
+    signalMapper4=new QSignalMapper(this);
     QList<QPushButton*> btns = ui->scrollAreaWidgetContents_4->findChildren<QPushButton*>();
     QList<QLabel*> labs =ui->scrollAreaWidgetContents_4->findChildren<QLabel*>();
     foreach (QLabel* lab,labs) { delete  lab;}
@@ -333,6 +421,9 @@ void MainWindow::on_recent_clicked()//当前运行状态（包括目前的容器
     ui->gridLayout_2->setColumnStretch(3,5);
     ui->gridLayout_2->setColumnStretch(4,5);
     ui->gridLayout_2->setColumnStretch(5,2);
+    ui->gridLayout_2->setColumnStretch(6,2);
+    ui->gridLayout_2->setColumnStretch(7,2);
+    ui->gridLayout_2->setColumnStretch(8,2);
     QString test = shell("docker ps -a | awk -F '\\\\s+ ' '{print $1}'");
     QString test2 = shell("docker ps -a | awk -F '\\\\s+ ' '{print $2}'");
     QString test3 = shell("docker ps -a | awk -F '\\\\s+ ' '{print $3}'");
@@ -356,13 +447,28 @@ void MainWindow::on_recent_clicked()//当前运行状态（包括目前的容器
         test1->setText(sss);
         ui->gridLayout_3->addWidget(test1,i,0);
         QPushButton* test2=new QPushButton(QWidget::tr("移除"));
+        QPushButton* test3=new QPushButton(QWidget::tr("详细信息"));
+        QPushButton* test4=new QPushButton(QWidget::tr("重启容器"));
+        QPushButton* test5=new QPushButton(QWidget::tr("进入容器"));
         if(i !=0)
         {
             ui->gridLayout_3->addWidget(test2,i,5);
+            ui->gridLayout_3->addWidget(test3,i,6);
+            ui->gridLayout_3->addWidget(test4,i,7);
+            ui->gridLayout_3->addWidget(test5,i,8);
             cout<<"sss"<<endl;
             connect(test2,SIGNAL(pressed()),signalMapper,SLOT(map()),Qt::UniqueConnection);
             signalMapper->setMapping(test2,sss);
             connect(signalMapper,SIGNAL(mapped(QString)),this,SLOT(remove(QString)),Qt::UniqueConnection);
+            connect(test3,SIGNAL(pressed()),signalMapper2,SLOT(map()),Qt::UniqueConnection);
+            signalMapper2->setMapping(test3,sss);
+            connect(signalMapper2,SIGNAL(mapped(QString)),this,SLOT(more(QString)),Qt::UniqueConnection);
+            connect(test4,SIGNAL(pressed()),signalMapper3,SLOT(map()),Qt::UniqueConnection);
+            signalMapper3->setMapping(test4,sss);
+            connect(signalMapper3,SIGNAL(mapped(QString)),this,SLOT(restart(QString)),Qt::UniqueConnection);
+            connect(test5,SIGNAL(pressed()),signalMapper4,SLOT(map()),Qt::UniqueConnection);
+            signalMapper4->setMapping(test5,sss);
+            connect(signalMapper4,SIGNAL(mapped(QString)),this,SLOT(enter(QString)),Qt::UniqueConnection);
         }
 
     }
@@ -407,4 +513,9 @@ void MainWindow::on_recent_clicked()//当前运行状态（包括目前的容器
 void MainWindow::on_download_pressed()//对新镜像搜索和下载页面
 {
     ui->stackedWidget->setCurrentIndex(2);
+}
+
+void MainWindow::on_pushButton_2_clicked()//对没用的容器做一些清理
+{
+    MainWindow::shell("pkexec echo y | docker container prune");
 }

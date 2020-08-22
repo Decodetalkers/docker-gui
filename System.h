@@ -24,6 +24,9 @@ private slots:
     void on_exit_clicked();
     void back(QString);
 
+
+    void on_pushButton_show_clicked();
+
 private:
     Ui::System *ui;
     QString pass;

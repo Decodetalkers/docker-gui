@@ -27,7 +27,13 @@ private slots:
     void test(QString);
     void test2(QString);
     void remove(QString);
+    void more(QString);
+    void restart(QString);
+    void enter(QString);
     void run(QString);
+    void runshell(QString);
+    void runshellback(QString);
+    void runshellture(QString);
     void init(QString);
     void on_back_clicked();
 
@@ -44,12 +50,18 @@ private slots:
 
     void on_download_pressed();
 
+    void on_pushButton_2_clicked();
+
 private:
     Ui::MainWindow *ui;
     QString pass;
     QString uuu;
     QSignalMapper *signalMapper;
     QSignalMapper *signalMapper2;
+    QSignalMapper *signalMapper3;
+    QSignalMapper *signalMapper4;
+    QSignalMapper *signalMapper5;
+    QSignalMapper *signalMapper6;
 };
 
 #endif // MAINWINDOW_H

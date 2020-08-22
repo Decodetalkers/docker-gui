@@ -11,14 +11,30 @@ System::System(QWidget *parent) :
 {
 
     ui->setupUi(this);
+    ui->lineEdit->setEchoMode(QLineEdit::Password);ui->lineEdit->setFocus();
+    ui->pushButton_show->setStyleSheet("QPushButton{border-image:url(:/ico/res/hide_pass.png);}");
 }
 
 System::~System()
 {
     delete ui;
 }
+void System::on_pushButton_show_clicked()
+{
+   //检测输入模式是否为密码输入
+   if(ui->lineEdit->echoMode()==QLineEdit::Password){
+       ui->pushButton_show->setStyleSheet("QPushButton{border-image:url(:/ico/res/show_pass.png);}");
+       ui->lineEdit->setEchoMode(QLineEdit::Normal);
+
+   }else{
+        ui->pushButton_show->setStyleSheet("QPushButton{border-image:url(:/ico/res/hide_pass.png);}");
+        ui->lineEdit->setEchoMode(QLineEdit::Password);
+     }
+
+}
 void System::on_open_clicked()
 {
+
     if(ui->lineEdit->text()==""){
         ui->label_pass->setText("请输入密码！");
         ui->label_pass->setStyleSheet("color:rgb(255, 0, 0);");

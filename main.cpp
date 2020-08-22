@@ -11,7 +11,8 @@ int main(int argc, char *argv[])
     QObject::connect(&p,SIGNAL(showfirstwindow(QString)),&s,SLOT(back(QString)));
     QObject::connect(&p,SIGNAL(quit()),&a,SLOT(quit()));
     s.show();
-    s.setWindowTitle("test");
+    s.setWindowTitle("login");
+    p.setWindowTitle("docker");
     s.resize(400,300);
     return a.exec();
 }
